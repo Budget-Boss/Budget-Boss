@@ -3,15 +3,15 @@ import type { FinancialData } from '../types';
 import { DollarSignIcon } from './icons/DollarSignIcon';
 import { ReceiptIcon } from './icons/ReceiptIcon';
 
+interface BudgetFormProps {
+  onSubmit: (data: FinancialData) => void;
+  isLoading: boolean;
+}
+
 interface ExpenseItem {
   id: string;
   category: string;
   amount: string;
-}
-
-interface BudgetFormProps {
-  onSubmit: (data: FinancialData) => void;
-  isLoading: boolean;
 }
 
 export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) => {
@@ -108,12 +108,12 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
             Monthly Expenses
         </label>
         <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_1fr_auto] gap-x-2 items-center px-1 text-sm text-gray-400">
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-x-2 items-center px-1 text-sm text-gray-400">
                 <span>Category</span>
-                <span className="hidden md:block">Monthly Cost</span>
+                <span>Monthly Cost</span>
             </div>
             {expenseItems.map((item, index) => (
-                <div key={item.id} className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_1fr_auto] gap-x-2 items-center">
+                <div key={item.id} className="grid grid-cols-[1fr_1fr_auto] gap-x-2 items-center">
                     <input
                         type="text"
                         value={item.category}
@@ -130,7 +130,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
                             type="number"
                             value={item.amount}
                             onChange={(e) => handleExpenseChange(item.id, 'amount', e.target.value)}
-                            placeholder="1500"
+                            placeholder="e.g., 1500"
                             className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 pl-7 pr-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
                             min="0"
                             step="0.01"
