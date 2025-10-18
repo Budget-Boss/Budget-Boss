@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrainCircuitIcon } from './icons/BrainCircuitIcon';
+import { GeminiLogo } from './icons/GeminiLogo';
 import { ChartBarIcon } from './icons/ChartBarIcon';
 import { TargetIcon } from './icons/TargetIcon';
 
@@ -41,9 +41,9 @@ export const AboutSection: React.FC = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
         <FeatureCard
-          icon={<BrainCircuitIcon className="h-6 w-6 text-cyan-400" />}
+          icon={<GeminiLogo className="h-6 w-6 text-cyan-400" />}
           title="AI-Powered Personalization"
-          description="Leverage the power of AI to get a budget that's truly yours. Our system analyzes your unique income and spending habits to craft a realistic and effective plan."
+          description="Leverage the power of the Gemini AI Backend to get a budget that's truly yours. Our system analyzes your unique income and spending habits to craft a realistic and effective plan."
         />
         <FeatureCard
           icon={<ChartBarIcon className="h-6 w-6 text-green-400" />}
