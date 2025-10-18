@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FinancialData, BudgetMode } from '../types';
 import { DollarSignIcon } from './icons/DollarSignIcon';
@@ -66,44 +67,51 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
         }
     }
 
-    // Validation for inflexible expenses
+    // Define keywords for validation checks
     const inflexibleKeywords = ['rent', 'debt', 'tuition', 'loan', 'mortgage', 'car payment', 'insurance', 'child support', 'alimony'];
+    const survivalKeywords = ['food', 'groceries', 'utilities', 'transport', 'gas', 'health', 'medicine', 'phone'];
+
     const inflexibleExpenses = filledExpenses.filter(item => {
         const categoryLower = item.category.trim().toLowerCase();
         return inflexibleKeywords.some(keyword => categoryLower.includes(keyword));
     });
 
-    const totalInflexibleExpenses = inflexibleExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0);
-
-    if (incomeNum < totalInflexibleExpenses) {
-      const formattedExpenses = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalInflexibleExpenses);
-      setError(`Your fixed, unchangeable expenses (e.g., Rent, Debt, Loans) total ${formattedExpenses}, which exceeds your income. This situation is not sustainable. Please review these critical entries.`);
-      return;
-    }
-
-    // Validation for savings goal being too high
-    if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
-      const remainingForFlexibleSpending = incomeNum - totalInflexibleExpenses - savingsGoalNum;
-
-      // If fixed costs + savings goal > income, it's an immediate failure.
-      if (remainingForFlexibleSpending < 0) {
-        setError('Your savings goal is too high. The total of your fixed expenses (e.g., Rent, Debt) and your savings goal exceeds your income. Please lower your savings goal.');
-        return;
-      }
-
-      const survivalKeywords = ['food', 'groceries', 'utilities', 'transport', 'gas', 'health', 'medicine', 'phone'];
-      
-      const hasSurvivalExpenses = filledExpenses.some(item => {
+    const hasSurvivalExpenses = filledExpenses.some(item => {
         const categoryLower = item.category.trim().toLowerCase();
         // Check if it's NOT an inflexible expense, but it IS a survival expense
         const isInflexible = inflexibleKeywords.some(keyword => categoryLower.includes(keyword));
         const isSurvival = survivalKeywords.some(keyword => categoryLower.includes(keyword));
         return !isInflexible && isSurvival;
-      });
+    });
 
-      // If there's no money left for listed essential expenses.
+    const totalInflexibleExpenses = inflexibleExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+
+    // Check 1: Inflexible expenses are greater than income.
+    if (incomeNum < totalInflexibleExpenses) {
+      const formattedExpenses = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalInflexibleExpenses);
+      setError(`Budget Boss has identified a critical issue. Your fixed expenses (like Rent, Debt, and Loans) total ${formattedExpenses}, which is more than your income. No budget can be created when fixed costs alone are this high. Please review your income and fixed expense numbers.`);
+      return;
+    }
+    
+    // Check 2: Inflexible expenses match income, but other survival costs exist.
+    if (incomeNum === totalInflexibleExpenses && hasSurvivalExpenses) {
+        setError(`Budget Boss has identified a critical issue. Your fixed expenses (like Rent, Debt, and Loans) match your entire income, leaving no money for essentials like food or utilities. Budget Boss cannot create a sustainable plan in this scenario. Please review your numbers.`);
+        return;
+    }
+
+    // Check 3: Savings goal is too high
+    if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
+      const remainingForFlexibleSpending = incomeNum - totalInflexibleExpenses - savingsGoalNum;
+
+      // If fixed costs + savings goal > income, it's an immediate failure.
+      if (remainingForFlexibleSpending < 0) {
+        setError('Your savings goal is currently unachievable. The total of your fixed expenses (e.g., Rent, Debt) and your savings goal is greater than your income, leaving no money for essentials like food. Budget Boss cannot create a sustainable plan in this scenario. Please lower your savings goal.');
+        return;
+      }
+
+      // If there's no money left for listed essential expenses because of the savings goal.
       if (hasSurvivalExpenses && remainingForFlexibleSpending <= 0) {
-        setError('Your savings goal is too high. After paying for fixed costs like rent and debt, there is no money left for essential survival expenses like food and utilities. Please lower your savings goal.');
+        setError('Your savings goal is too high. After paying for fixed costs and setting aside your savings, there is no money left for essential survival expenses like food and utilities that you have listed. Budget Boss cannot create a sustainable plan. Please lower your savings goal.');
         return;
       }
     }
@@ -177,17 +185,18 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
             Monthly Expenses
         </label>
         <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_1fr_auto] gap-x-2 items-center px-1 text-sm text-gray-400">
+            <div className="grid grid-cols-[minmax(0,1fr)_130px_40px] gap-x-3 items-center px-1 text-sm text-gray-400">
                 <span>Category</span>
-                <span className="hidden md:block">Monthly Cost</span>
+                <span>Monthly Cost</span>
+                <span />
             </div>
-            {expenseItems.map((item, index) => (
-                <div key={item.id} className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_1fr_auto] gap-x-2 items-center">
+            {expenseItems.map((item) => (
+                <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_130px_40px] gap-x-3 items-center">
                     <input
                         type="text"
                         value={item.category}
                         onChange={(e) => handleExpenseChange(item.id, 'category', e.target.value)}
-                        placeholder="e.g., Rent"
+                        placeholder="e.g., Utilities, Gas, Shopping"
                         className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed"
                         aria-label="Expense Category"
                         disabled={item.isFixed}
@@ -210,15 +219,13 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
                     <button
                         type="button"
                         onClick={() => handleRemoveExpense(item.id)}
-                        className="text-gray-500 hover:text-red-400 transition-colors duration-200 p-2 rounded-full disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center disabled:hover:text-gray-500"
+                        className="text-gray-500 hover:text-red-400 transition-colors duration-200 p-2 rounded-full disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center disabled:hover:text-gray-500"
                         aria-label="Remove expense"
                         disabled={item.isFixed}
                     >
-                        {!item.isFixed && (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        )}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
                 </div>
             ))}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { FinancialData } from '../types';
 import { DollarSignIcon } from './icons/DollarSignIcon';
@@ -64,7 +65,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
 
     if (incomeNum < totalExpenses) {
       const formattedExpenses = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalExpenses);
-      setError(`Your listed expenses (${formattedExpenses}) exceed your income. Please review your entries.`);
+      setError(`Budget Boss has found an issue: your total monthly expenses of ${formattedExpenses} exceed your income. A budget cannot be created in this situation. Please review your entries.`);
       return;
     }
 
@@ -118,7 +119,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
                         type="text"
                         value={item.category}
                         onChange={(e) => handleExpenseChange(item.id, 'category', e.target.value)}
-                        placeholder="e.g., Rent"
+                        placeholder="e.g., Rent, Utilities, Gas"
                         className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
                         aria-label="Expense Category"
                     />
