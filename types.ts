@@ -6,6 +6,7 @@ export enum BudgetMode {
 export interface FinancialData {
   income: number;
   expenses: string; // User inputs a string of expenses
+  savingsGoal?: number; // Optional: for Standard mode
 }
 
 export interface BudgetItem {

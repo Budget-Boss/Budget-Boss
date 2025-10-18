@@ -48,7 +48,7 @@ const App: React.FC = () => {
             <h2 className="text-3xl font-bold text-center mb-2 text-cyan-400">Create Your Budget</h2>
             <p className="text-center text-gray-400 mb-6">Select a mode and enter your financial details below.</p>
             <ModeSelector currentMode={budgetMode} onModeChange={setBudgetMode} />
-            <BudgetForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+            <BudgetForm onSubmit={handleFormSubmit} isLoading={isLoading} budgetMode={budgetMode} />
           </section>
 
           <BudgetPlanDisplay

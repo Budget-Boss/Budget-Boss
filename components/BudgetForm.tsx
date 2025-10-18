@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import type { FinancialData } from '../types';
+import { FinancialData, BudgetMode } from '../types';
 import { DollarSignIcon } from './icons/DollarSignIcon';
 import { ReceiptIcon } from './icons/ReceiptIcon';
+import { TargetIcon } from './icons/TargetIcon';
 
 interface ExpenseItem {
   id: string;
@@ -12,10 +13,12 @@ interface ExpenseItem {
 interface BudgetFormProps {
   onSubmit: (data: FinancialData) => void;
   isLoading: boolean;
+  budgetMode: BudgetMode;
 }
 
-export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) => {
+export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, budgetMode }) => {
   const [income, setIncome] = useState<string>('');
+  const [savingsGoal, setSavingsGoal] = useState<string>('');
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
     { id: crypto.randomUUID(), category: '', amount: '' },
   ]);
@@ -38,6 +41,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const incomeNum = parseFloat(income);
+    const savingsGoalNum = parseFloat(savingsGoal);
 
     const filledExpenses = expenseItems.filter(
       (item) => item.category.trim() !== '' || item.amount.trim() !== ''
@@ -48,6 +52,13 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
       return;
     }
     
+    if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
+      if (savingsGoalNum >= incomeNum) {
+        setError('Your savings goal must be less than your monthly income.');
+        return;
+      }
+    }
+
     if (filledExpenses.length === 0) {
         setError('Please enter at least one expense.');
         return;
@@ -58,6 +69,47 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
             setError('Please ensure all expense rows have a valid category and a positive amount.');
             return;
         }
+    }
+
+    // New Validation: Stricter check for unrealistic savings goals based on fixed expenses
+    if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
+      const fixedExpenseKeywords = ['rent', 'mortgage', 'tuition', 'loan', 'car payment', 'insurance', 'debt', 'childcare'];
+      
+      const fixedExpenses = filledExpenses.filter(item => 
+        fixedExpenseKeywords.some(keyword => item.category.toLowerCase().includes(keyword))
+      );
+
+      if (fixedExpenses.length > 0) {
+        const totalFixedExpenses = fixedExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+        const disposableForExpenses = incomeNum - savingsGoalNum;
+
+        if (totalFixedExpenses >= disposableForExpenses) {
+          const formattedDisposable = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(disposableForExpenses);
+          const formattedFixed = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalFixedExpenses);
+          const fixedCategories = fixedExpenses.map(item => `'${item.category.trim()}'`).join(', ');
+
+          setError(`Your savings goal is too ambitious. After setting it aside, you would have only ${formattedDisposable} left for all your expenses. However, your non-negotiable costs (like ${fixedCategories}) already total ${formattedFixed}. Please set a more realistic savings goal.`);
+          return;
+        }
+      } else {
+        // Fallback check if no specific fixed expenses are found, compares against the single largest expense
+        const disposableForExpenses = incomeNum - savingsGoalNum;
+        
+        let maxExpense = { category: '', amount: 0 };
+        for (const item of filledExpenses) {
+            const amount = parseFloat(item.amount);
+            if (amount > maxExpense.amount) {
+                maxExpense = { category: item.category.trim(), amount };
+            }
+        }
+        
+        if (maxExpense.amount > 0 && maxExpense.amount >= disposableForExpenses) {
+            const formattedDisposable = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(disposableForExpenses);
+            const formattedMaxExpense = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(maxExpense.amount);
+            setError(`Your savings goal is too ambitious. After setting it aside, you would only have ${formattedDisposable} left for all your expenses. However, your single largest expense, '${maxExpense.category}', is ${formattedMaxExpense}. Please set a more realistic savings goal.`);
+            return;
+        }
+      }
     }
 
     const totalExpenses = filledExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0);
@@ -73,7 +125,11 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
       .map(item => `${item.category.trim()} ${item.amount}`)
       .join(', ');
       
-    onSubmit({ income: incomeNum, expenses: expensesString });
+    onSubmit({ 
+      income: incomeNum, 
+      expenses: expensesString,
+      savingsGoal: budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0 ? savingsGoalNum : undefined
+    });
   };
 
   return (
@@ -101,6 +157,31 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading }) =
           />
         </div>
       </div>
+      
+      {budgetMode === BudgetMode.STANDARD && (
+        <div>
+          <label htmlFor="savingsGoal" className="flex items-center text-lg font-semibold text-gray-300 mb-2">
+            <TargetIcon className="h-5 w-5 mr-2 text-yellow-400" />
+            Monthly Savings Goal (Optional)
+          </label>
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <span className="text-gray-400 sm:text-sm">$</span>
+            </div>
+            <input
+              id="savingsGoal"
+              type="number"
+              value={savingsGoal}
+              onChange={(e) => setSavingsGoal(e.target.value)}
+              placeholder="e.g., 500"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 pl-7 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+              min="0"
+              step="50"
+            />
+          </div>
+        </div>
+      )}
+
 
       <div>
         <label className="flex items-center text-lg font-semibold text-gray-300 mb-2">

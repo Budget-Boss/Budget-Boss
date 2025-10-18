@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { FinancialData, BudgetPlan, BudgetMode } from '../types';
 import { BudgetMode as BudgetModeEnum } from '../types';
@@ -55,12 +53,19 @@ const responseSchema = {
   required: ["potentialMonthlySavings", "potentialAnnualSavings", "summary", "budgetBreakdown", "financialTips"],
 };
 
-const getModeSpecificInstructions = (mode: BudgetMode): string => {
+const getModeSpecificInstructions = (mode: BudgetMode, data: FinancialData): string => {
   switch (mode) {
     case BudgetModeEnum.MINIMALIST:
       return "For this plan, adopt an extreme 'cheapscape' or 'frugal survival' approach. The `budgetBreakdown` should **only** include absolute survival needs (e.g., essential housing, basic groceries, non-negotiable utilities). **Do not include** categories like entertainment, dining out, subscriptions, or hobbies in the `budgetBreakdown` at all—not even with a value of 0. Instead, in the `financialTips` section, you **must** add a tip explaining this choice. For example: 'Entertainment and dining out, among other non-essentials, are intentionally omitted from this plan to maximize savings. This aggressive, short-term strategy redirects all possible funds towards your financial goals.' For the food category, recommend extremely low-cost staples, citing the 'unseasoned dry chicken and white rice' principle. The overall summary should justify these drastic cuts as a high-intensity strategy to rapidly reach a critical financial goal.";
     case BudgetModeEnum.STANDARD:
     default:
+      if (data.savingsGoal && data.savingsGoal > 0) {
+        return `The user has a specific savings goal of ${data.savingsGoal} per month. Your primary objective is to create a realistic budget that meets or EXCEEDS this goal.
+- Analyze the user's provided expenses. Reduce them where necessary to free up funds for the savings goal. Be realistic; for essential categories like 'Groceries' or 'Food', recommend a reasonable amount, not an unrealistically low or excessively high one, even if the user's input is large.
+- After allocating funds for the adjusted expenses and the user's savings goal, calculate the remaining income.
+- You MUST include a new category in the 'budgetBreakdown' called 'Discretionary & Leisure' representing this leftover money. This shows the user what they can spend freely without affecting their goals. If there is no money left, omit this category.
+- The summary should emphasize how the plan helps them achieve their specified savings target.`;
+      }
       return "For this plan, create a balanced '50/30/20' style budget (50% needs, 30% wants, 20% savings) as a guiding principle, but adjust it based on the user's data. The goal is a sustainable budget that allows for comfortable living while still achieving significant savings. The user should not feel overly restricted.";
   }
 };
@@ -69,15 +74,15 @@ export const generateBudgetPlan = async (
   data: FinancialData,
   mode: BudgetMode
 ): Promise<BudgetPlan> => {
-  const modeInstructions = getModeSpecificInstructions(mode);
+  const modeInstructions = getModeSpecificInstructions(mode, data);
   
   const systemInstruction = `You are 'Budget Boss', an expert financial advisor AI. Your goal is to create clear, actionable, and personalized budget plans to help users achieve their financial goals, such as retirement. Your tone must be encouraging, positive, and informative. Always provide a summary of potential monthly and annual savings. Use the user's currency implicitly without specifying a symbol. All monetary values in your response must be numbers, precise to two decimal places.`;
   
   const prompt = `Please create a budget plan based on the following financial data:
 - Monthly Income (after tax): ${data.income}
-- Current Monthly Expenses: ${data.expenses}
+${data.savingsGoal ? `- Desired Monthly Savings Goal: ${data.savingsGoal}\n` : ''}- Current Monthly Expenses: ${data.expenses}
 
-**Important Rule:** The 'budgetBreakdown' in your response must be based *only* on the expense categories provided by the user in 'Current Monthly Expenses'. You can recommend reducing the amount for an existing category or removing a category entirely by omitting it from the breakdown (especially for non-essentials in Minimalist mode). **Do not introduce any new expense categories.** Your task is to optimize the user's *existing* expense list, not to add to it.
+**Important Rule:** The 'budgetBreakdown' in your response must be based *only* on the expense categories provided by the user in 'Current Monthly Expenses', with one exception: you may add a 'Discretionary & Leisure' category if the Standard mode instructions require it. You can recommend reducing the amount for an existing category or removing a category entirely by omitting it from the breakdown. **Do not introduce any other new expense categories.** Your task is to optimize the user's *existing* expense list.
 
 Apply the following budgeting approach: ${modeInstructions}`;
 
