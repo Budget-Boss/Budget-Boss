@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const PiggyBankIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -9,14 +8,23 @@ export const PiggyBankIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =>
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     {...props}
   >
-    <path d="M10 20.5c0 .83.67 1.5 1.5 1.5h1c.83 0 1.5-.67 1.5-1.5v-1.5h-4v1.5zM10 5.5v-2.5c0-.83.67-1.5 1.5-1.5h1c.83 0 1.5.67 1.5 1.5V6" />
-    <path d="M18.5 6h-13C4.67 6 4 6.67 4 7.5v1c0 .83.67 1.5 1.5 1.5h13c.83 0 1.5-.67 1.5-1.5v-1c0-.83-.67-1.5-1.5-1.5z" />
-    <path d="M20 10.5v5c0 .83-.67 1.5-1.5 1.5h-13c-.83 0-1.5-.67-1.5-1.5v-5" />
-    <path d="M12 11.5v1" />
+    {/* Body */}
+    <path d="M18.5 15.5c-1.93 1.63-4.43 2.5-7 2.5-4.14 0-7.5-3.36-7.5-7.5s3.36-7.5 7.5-7.5c2.57 0 5.07.87 7 2.5" />
+    {/* Snout */}
+    <path d="M18.5 15.5C20.12 14.59 21 13.11 21 11.5c0-1.61-.88-3.09-2.5-4" />
+    {/* Legs */}
+    <path d="M6 18v2" />
+    <path d="M12 18v2" />
+    {/* Ear */}
+    <path d="M9 7l1-2" />
+    {/* Slot */}
+    <path d="M14.5 7.5h2" />
+    {/* Tail */}
+    <path d="M4 14c-.5 1.5-1.5 2-1.5 3s1 1.5 1.5 1.5" />
   </svg>
 );
