@@ -8,6 +8,7 @@ import { BudgetMode, type FinancialData, type BudgetPlan } from './types';
 import { ModeSelector } from './components/ModeSelector';
 import { AboutSection } from './components/AboutSection';
 import { AboutUsSection } from './components/AboutUsSection';
+import { BudgetModesExplainedSection } from './components/BudgetModesExplainedSection';
 
 const App: React.FC = () => {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(BudgetMode.STANDARD);
@@ -66,6 +67,7 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <AboutSection />
           <AboutUsSection />
+          <BudgetModesExplainedSection />
           
           <section id="budget-form" className="bg-gray-800 p-6 md:p-8 rounded-2xl shadow-2xl mb-12 border border-gray-700">
             <h2 className="text-3xl font-bold text-center mb-2 text-cyan-400">Create Your Budget</h2>

@@ -49,6 +49,13 @@ const responseSchema = {
         type: Type.STRING 
       },
     },
+    surplusSuggestions: {
+      type: Type.ARRAY,
+      description: "Optional: If the user has a large surplus after budgeting, provide 2-3 creative ideas for it (e.g., investments, travel).",
+      items: {
+        type: Type.STRING
+      },
+    },
   },
   required: ["potentialMonthlySavings", "potentialAnnualSavings", "summary", "budgetBreakdown", "financialTips"],
 };
@@ -60,11 +67,13 @@ const getModeSpecificInstructions = (mode: BudgetMode, data: FinancialData): str
     case BudgetModeEnum.STANDARD:
     default:
       if (data.savingsGoal && data.savingsGoal > 0) {
-        return `The user has a specific savings goal of ${data.savingsGoal} per month. Your primary objective is to create a realistic budget that meets or EXCEEDS this goal.
-- Analyze the user's provided expenses. Reduce them where necessary to free up funds for the savings goal. Be realistic; for essential categories like 'Groceries' or 'Food', recommend a reasonable amount, not an unrealistically low or excessively high one, even if the user's input is large.
-- After allocating funds for the adjusted expenses and the user's savings goal, calculate the remaining income.
-- You MUST include a new category in the 'budgetBreakdown' called 'Discretionary & Leisure' representing this leftover money. This shows the user what they can spend freely without affecting their goals. If there is no money left, omit this category.
-- The summary should emphasize how the plan helps them achieve their specified savings target.`;
+        return `The user has a specific savings goal of ${data.savingsGoal} per month. Your primary objective is to construct a budget where the 'potentialMonthlySavings' in your response is **exactly** ${data.savingsGoal}.
+- The total available spending for the month is (Income - Savings Goal).
+- Your 'budgetBreakdown' must allocate this total available spending across the user's expense categories.
+- If the user's initial expenses are lower than the available spending, you MUST increase the recommended amounts for their flexible, non-essential expense categories (like 'Entertainment', 'Shopping', 'Dining Out') to use the surplus. This demonstrates to the user that they can spend more on their wants while still comfortably hitting their savings target.
+- If the user's expenses are higher, you must realistically reduce flexible spending to fit within the budget.
+- The summary should highlight that the plan not only meets their goal but also gives them a clear picture of their comfortable spending limits.
+- **Crucially, the final 'potentialMonthlySavings' value in the JSON object you return must be exactly ${data.savingsGoal}.**`;
       }
       return "For this plan, create a balanced '50/30/20' style budget (50% needs, 30% wants, 20% savings) as a guiding principle, but adjust it based on the user's data. The goal is a sustainable budget that allows for comfortable living while still achieving significant savings. The user should not feel overly restricted.";
   }
@@ -82,7 +91,18 @@ export const generateBudgetPlan = async (
 - Monthly Income (after tax): ${data.income}
 ${data.savingsGoal ? `- Desired Monthly Savings Goal: ${data.savingsGoal}\n` : ''}- Current Monthly Expenses: ${data.expenses}
 
-**Important Rule:** The 'budgetBreakdown' in your response must be based *only* on the expense categories provided by the user in 'Current Monthly Expenses', with one exception: you may add a 'Discretionary & Leisure' category if the Standard mode instructions require it. You can recommend reducing the amount for an existing category or removing a category entirely by omitting it from the breakdown. **Do not introduce any other new expense categories.** Your task is to optimize the user's *existing* expense list.
+**Health and Safety Rule:** Your primary responsibility is the user's financial and personal well-being. If you identify expense categories related to harmful or high-risk activities (such as 'gambling', 'drugs', 'heroine', 'alcohol', 'vaping', 'cigarettes'), you **must** set the \`recommendedAmount\` for these categories to \`0\`. In the \`notes\` for that budget item, provide a supportive and non-judgmental explanation, for example: 'We've set this to $0 to prioritize your long-term health and financial security, which is the most valuable investment you can make.' This rule overrides all other budgeting modes and instructions.
+
+**Inflexible Expenses Rule:** The following expense categories are considered fixed and non-negotiable based on their names: rent, debt, tuition, loan, mortgage, car payment, insurance, child support, alimony. When you find an expense in the user's list that matches these, its recommended amount in the 'budgetBreakdown' **must remain exactly the same** as the user's input. You are not allowed to suggest reductions for these items. All budget adjustments must come from other, flexible spending categories.
+
+**Core Principle: Realistic Budgeting for High Earners:** This principle overrides all other budgeting instructions when income is significantly higher than expenses.
+1.  **Ground in Reality:** Your top priority is a budget reflecting a realistic, single-person lifestyle. Do NOT inflate spending categories just because income is high. Essential costs like 'Food' or 'Groceries' must stay within a sensible range for one person (e.g., $800-$1500 for a generous budget). 'Wants' like 'Entertainment' can be generous, but should also remain realistic.
+2.  **Leave Surplus Unallocated:** Do NOT attempt to budget the entire income. After setting a realistic spending plan and meeting the user's savings goal (or setting a reasonable one if none is provided), leave the remaining massive surplus unallocated. The UI will automatically calculate this as "Money Left Over".
+3.  **Use Surplus Suggestions:** Use the \`surplusSuggestions\` field to provide creative ideas for how the user can invest or use their large unallocated surplus. This helps them see the potential of their earnings.
+
+**Critical Scenario Handling:** If the user's total 'Current Monthly Expenses' exceed their 'Monthly Income', your primary goal is to create a viable budget by recommending significant, realistic reductions to their spending. Your plan must bring their total expenses below their income to allow for savings. Be direct but encouraging about the need for these changes.
+
+**Important Rule:** The 'budgetBreakdown' in your response must be based *only* on the expense categories provided by the user in 'Current Monthly Expenses'. You can recommend reducing the amount for an existing category or removing a category entirely by omitting it from the breakdown. **Do not introduce any new expense categories under any circumstances.** Your task is to optimize the user's *existing* expense list.
 
 Apply the following budgeting approach: ${modeInstructions}`;
 

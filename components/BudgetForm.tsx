@@ -41,7 +41,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const incomeNum = parseFloat(income);
-    const savingsGoalNum = parseFloat(savingsGoal);
+    const savingsGoalNum = parseFloat(savingsGoal) || 0;
 
     const filledExpenses = expenseItems.filter(
       (item) => item.category.trim() !== '' || item.amount.trim() !== ''
@@ -52,13 +52,6 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
       return;
     }
     
-    if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
-      if (savingsGoalNum >= incomeNum) {
-        setError('Your savings goal must be less than your monthly income.');
-        return;
-      }
-    }
-
     if (filledExpenses.length === 0) {
         setError('Please enter at least one expense.');
         return;
@@ -71,53 +64,39 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
         }
     }
 
-    // New Validation: Stricter check for unrealistic savings goals based on fixed expenses
-    if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
-      const fixedExpenseKeywords = ['rent', 'mortgage', 'tuition', 'loan', 'car payment', 'insurance', 'debt', 'childcare'];
-      
-      const fixedExpenses = filledExpenses.filter(item => 
-        fixedExpenseKeywords.some(keyword => item.category.toLowerCase().includes(keyword))
-      );
+    // Validation for inflexible expenses
+    const inflexibleKeywords = ['rent', 'debt', 'tuition', 'loan', 'mortgage', 'car payment', 'insurance', 'child support', 'alimony'];
+    const inflexibleExpenses = filledExpenses.filter(item => {
+        const categoryLower = item.category.trim().toLowerCase();
+        return inflexibleKeywords.some(keyword => categoryLower.includes(keyword));
+    });
 
-      if (fixedExpenses.length > 0) {
-        const totalFixedExpenses = fixedExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0);
-        const disposableForExpenses = incomeNum - savingsGoalNum;
+    const totalInflexibleExpenses = inflexibleExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0);
 
-        if (totalFixedExpenses >= disposableForExpenses) {
-          const formattedDisposable = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(disposableForExpenses);
-          const formattedFixed = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalFixedExpenses);
-          const fixedCategories = fixedExpenses.map(item => `'${item.category.trim()}'`).join(', ');
-
-          setError(`Your savings goal is too ambitious. After setting it aside, you would have only ${formattedDisposable} left for all your expenses. However, your non-negotiable costs (like ${fixedCategories}) already total ${formattedFixed}. Please set a more realistic savings goal.`);
-          return;
-        }
-      } else {
-        // Fallback check if no specific fixed expenses are found, compares against the single largest expense
-        const disposableForExpenses = incomeNum - savingsGoalNum;
-        
-        let maxExpense = { category: '', amount: 0 };
-        for (const item of filledExpenses) {
-            const amount = parseFloat(item.amount);
-            if (amount > maxExpense.amount) {
-                maxExpense = { category: item.category.trim(), amount };
-            }
-        }
-        
-        if (maxExpense.amount > 0 && maxExpense.amount >= disposableForExpenses) {
-            const formattedDisposable = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(disposableForExpenses);
-            const formattedMaxExpense = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(maxExpense.amount);
-            setError(`Your savings goal is too ambitious. After setting it aside, you would only have ${formattedDisposable} left for all your expenses. However, your single largest expense, '${maxExpense.category}', is ${formattedMaxExpense}. Please set a more realistic savings goal.`);
-            return;
-        }
-      }
+    if (incomeNum < totalInflexibleExpenses) {
+      const formattedExpenses = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalInflexibleExpenses);
+      setError(`Your fixed, unchangeable expenses (e.g., Rent, Debt, Loans) total ${formattedExpenses}, which exceeds your income. This situation is not sustainable. Please review these critical entries.`);
+      return;
     }
 
-    const totalExpenses = filledExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+    // New validation for savings goal being too high
+    if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
+      const survivalKeywords = ['food', 'groceries', 'utilities', 'transport', 'gas', 'health', 'medicine', 'phone'];
+      
+      const hasSurvivalExpenses = filledExpenses.some(item => {
+        const categoryLower = item.category.trim().toLowerCase();
+        // Check if it's NOT an inflexible expense, but it IS a survival expense
+        const isInflexible = inflexibleKeywords.some(keyword => categoryLower.includes(keyword));
+        const isSurvival = survivalKeywords.some(keyword => categoryLower.includes(keyword));
+        return !isInflexible && isSurvival;
+      });
 
-    if (incomeNum < totalExpenses) {
-      const formattedExpenses = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalExpenses);
-      setError(`Your listed expenses (${formattedExpenses}) exceed your income. Please review your entries.`);
-      return;
+      const remainingForFlexibleSpending = incomeNum - totalInflexibleExpenses - savingsGoalNum;
+
+      if (hasSurvivalExpenses && remainingForFlexibleSpending <= 0) {
+        setError('Your savings goal is too high. After paying for fixed costs like rent and debt, there is no money left for essential survival expenses like food and utilities. Please lower your savings goal.');
+        return;
+      }
     }
 
     setError(null);

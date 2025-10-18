@@ -26,4 +26,5 @@ export interface BudgetPlan {
   summary: string;
   budgetBreakdown: BudgetItem[];
   financialTips: string[];
+  surplusSuggestions?: string[];
 }
