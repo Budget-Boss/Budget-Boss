@@ -20,7 +20,8 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
   const [income, setIncome] = useState<string>('');
   const [savingsGoal, setSavingsGoal] = useState<string>('');
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
-    { id: crypto.randomUUID(), category: '', amount: '' },
+    { id: crypto.randomUUID(), category: 'Rent', amount: '' },
+    { id: crypto.randomUUID(), category: 'Food', amount: '' },
   ]);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,8 +80,16 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
       return;
     }
 
-    // New validation for savings goal being too high
+    // Validation for savings goal being too high
     if (budgetMode === BudgetMode.STANDARD && savingsGoalNum > 0) {
+      const remainingForFlexibleSpending = incomeNum - totalInflexibleExpenses - savingsGoalNum;
+
+      // If fixed costs + savings goal > income, it's an immediate failure.
+      if (remainingForFlexibleSpending < 0) {
+        setError('Your savings goal is too high. The total of your fixed expenses (e.g., Rent, Debt) and your savings goal exceeds your income. Please lower your savings goal.');
+        return;
+      }
+
       const survivalKeywords = ['food', 'groceries', 'utilities', 'transport', 'gas', 'health', 'medicine', 'phone'];
       
       const hasSurvivalExpenses = filledExpenses.some(item => {
@@ -91,8 +100,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
         return !isInflexible && isSurvival;
       });
 
-      const remainingForFlexibleSpending = incomeNum - totalInflexibleExpenses - savingsGoalNum;
-
+      // If there's no money left for listed essential expenses.
       if (hasSurvivalExpenses && remainingForFlexibleSpending <= 0) {
         setError('Your savings goal is too high. After paying for fixed costs like rent and debt, there is no money left for essential survival expenses like food and utilities. Please lower your savings goal.');
         return;
