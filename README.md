@@ -2,11 +2,15 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+## Budget Boss
 
-This contains everything you need to run your app locally.
+# Retire effortlessly with your personal AI financial planner.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1bKlfC-vwJojs3U-8RUuzw6DKrOYjHoiy
+This website tracks your finanical decisions for a planned amount of time. It uses an AI backend to compute the budgeting for clients.
+
+
+
+
 
 ## Run Locally
 
