@@ -6,6 +6,7 @@ import { Footer } from './components/Footer';
 import { generateBudgetPlan } from './services/geminiService';
 import { BudgetMode, type FinancialData, type BudgetPlan } from './types';
 import { ModeSelector } from './components/ModeSelector';
+import { AboutSection } from './components/AboutSection';
 
 const App: React.FC = () => {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(BudgetMode.STANDARD);
@@ -39,6 +40,8 @@ const App: React.FC = () => {
       <Header onGetStarted={handleGetStarted} />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
+          <AboutSection />
+          
           <section id="budget-form" className="bg-gray-800 p-6 md:p-8 rounded-2xl shadow-2xl mb-12 border border-gray-700">
             <h2 className="text-3xl font-bold text-center mb-2 text-cyan-400">Create Your Budget</h2>
             <p className="text-center text-gray-400 mb-6">Select a mode and enter your financial details below.</p>
