@@ -101,72 +101,74 @@ export const BudgetPlanDisplay: React.FC<BudgetPlanDisplayProps> = ({ plan, isLo
   }
 
   return (
-    <section className="bg-gray-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-700">
-      <h2 className="text-3xl font-bold text-center mb-4 text-cyan-400">Your Budget Boss Plan</h2>
-      <p className="text-center text-gray-300 mb-8 max-w-2xl mx-auto">{plan.summary}</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-gray-700/50 p-6 rounded-xl border border-gray-600 text-center flex flex-col justify-center">
-          <h3 className="text-lg font-semibold text-gray-300 mb-2">Your Current Savings</h3>
-          <p className="text-4xl font-bold text-white">{formatCurrency(currentUserSavings)}</p>
-          <p className="text-md text-gray-400 mt-1">({formatCurrency(currentUserSavings * 12)} annually)</p>
-        </div>
-        <div className="bg-green-800/30 p-6 rounded-xl border border-green-700 text-center flex flex-col justify-center">
-          <h3 className="text-lg font-semibold text-green-300 mb-2">Potential Savings with Plan</h3>
-          <p className="text-4xl font-bold text-white">{formatCurrency(potentialMonthlySavings)}</p>
-          <p className="text-md text-green-400 mt-1">({formatCurrency(potentialAnnualSavings)} annually)</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div>
-          <h3 className="text-2xl font-bold mb-4 text-gray-200">Your Current Expenses</h3>
-          <div className="space-y-3 bg-gray-700/30 p-4 rounded-lg border border-gray-600">
-            {userExpenses.map((item, index) => (
-              <div key={index} className="flex justify-between items-center text-gray-300">
-                <span>{item.category}</span>
-                <span>{formatCurrency(item.amount)}</span>
-              </div>
-            ))}
-            <div className="border-t border-gray-500 my-2"></div>
-            <div className="flex justify-between items-center font-bold text-white">
-              <span>Total Expenses</span>
-              <span>{formatCurrency(totalUserExpenses)}</span>
-            </div>
+    <>
+      <section className="bg-gray-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-700">
+        <h2 className="text-3xl font-bold text-center mb-4 text-cyan-400">Your Budget Boss Plan</h2>
+        <p className="text-center text-gray-300 mb-8 max-w-2xl mx-auto">{plan.summary}</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-gray-700/50 p-6 rounded-xl border border-gray-600 text-center flex flex-col justify-center">
+            <h3 className="text-lg font-semibold text-gray-300 mb-2">Your Current Savings</h3>
+            <p className="text-4xl font-bold text-white">{formatCurrency(currentUserSavings)}</p>
+            <p className="text-md text-gray-400 mt-1">({formatCurrency(currentUserSavings * 12)} annually)</p>
+          </div>
+          <div className="bg-green-800/30 p-6 rounded-xl border border-green-700 text-center flex flex-col justify-center">
+            <h3 className="text-lg font-semibold text-green-300 mb-2">Potential Savings with Plan</h3>
+            <p className="text-4xl font-bold text-white">{formatCurrency(potentialMonthlySavings)}</p>
+            <p className="text-md text-green-400 mt-1">({formatCurrency(potentialAnnualSavings)} annually)</p>
           </div>
         </div>
-        <div>
-          <h3 className="text-2xl font-bold mb-4 text-gray-200">Recommended Budget</h3>
-          <div className="space-y-4">
-            {plan.budgetBreakdown.map((item, index) => (
-              <div key={index} className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-cyan-300">{item.category}</span>
-                  <span className="font-bold text-lg text-white">{formatCurrency(item.recommendedAmount)}</span>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-200">Your Current Expenses</h3>
+            <div className="space-y-3 bg-gray-700/30 p-4 rounded-lg border border-gray-600">
+              {userExpenses.map((item, index) => (
+                <div key={index} className="flex justify-between items-center text-gray-300">
+                  <span>{item.category}</span>
+                  <span>{formatCurrency(item.amount)}</span>
                 </div>
-                <p className="text-sm text-gray-400 mt-1">{item.notes}</p>
-              </div>
-            ))}
-            <div className="border-t border-gray-500 my-2"></div>
-            <div className="flex justify-between items-center font-bold text-white bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+              ))}
+              <div className="border-t border-gray-500 my-2"></div>
+              <div className="flex justify-between items-center font-bold text-white">
                 <span>Total Expenses</span>
-                <span>{formatCurrency(totalRecommendedExpenses)}</span>
+                <span>{formatCurrency(totalUserExpenses)}</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-200">Recommended Budget</h3>
+            <div className="space-y-4">
+              {plan.budgetBreakdown.map((item, index) => (
+                <div key={index} className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-cyan-300">{item.category}</span>
+                    <span className="font-bold text-lg text-white">{formatCurrency(item.recommendedAmount)}</span>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-1">{item.notes}</p>
+                </div>
+              ))}
+              <div className="border-t border-gray-500 my-2"></div>
+              <div className="flex justify-between items-center font-bold text-white bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                  <span>Total Expenses</span>
+                  <span>{formatCurrency(totalRecommendedExpenses)}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div>
-          <h3 className="text-2xl font-bold mb-4 text-gray-200">Top Financial Tips</h3>
-          <ul className="space-y-3">
-            {plan.financialTips.map((tip, index) => (
-              <li key={index} className="flex items-start">
-                <span className="text-green-400 font-bold mr-3">✔</span>
-                <p className="text-gray-300">{tip}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-    </section>
+      </section>
+      
+      <section className="bg-gray-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-700 mt-8">
+        <h3 className="text-2xl font-bold text-center mb-6 text-cyan-400">Top Financial Tips</h3>
+        <ol className="space-y-4 max-w-3xl mx-auto">
+          {plan.financialTips.map((tip, index) => (
+            <li key={index} className="flex items-start p-4 bg-gray-700/50 rounded-lg border border-gray-600 hover:border-cyan-500/50 transition-colors duration-300">
+              <span className="text-cyan-400 font-bold mr-4 flex-shrink-0 mt-1 text-lg">{index + 1}.</span>
+              <p className="text-gray-300">{tip}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </>
   );
 };

@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { FinancialData, BudgetPlan, BudgetMode } from '../types';
 import { BudgetMode as BudgetModeEnum } from '../types';
@@ -57,7 +58,7 @@ const responseSchema = {
 const getModeSpecificInstructions = (mode: BudgetMode): string => {
   switch (mode) {
     case BudgetModeEnum.MINIMALIST:
-      return "For this plan, adopt a 'minimalist' approach. Be very aggressive in suggesting cuts to non-essential spending to maximize savings potential. Provide a list of specific areas to cut back on and justify why these cuts are impactful for long-term savings goals like retirement. Focus on needs over wants.";
+      return "For this plan, adopt an extreme 'cheapscape' or 'frugal survival' approach. The `budgetBreakdown` should **only** include absolute survival needs (e.g., essential housing, basic groceries, non-negotiable utilities). **Do not include** categories like entertainment, dining out, subscriptions, or hobbies in the `budgetBreakdown` at all—not even with a value of 0. Instead, in the `financialTips` section, you **must** add a tip explaining this choice. For example: 'Entertainment and dining out, among other non-essentials, are intentionally omitted from this plan to maximize savings. This aggressive, short-term strategy redirects all possible funds towards your financial goals.' For the food category, recommend extremely low-cost staples, citing the 'unseasoned dry chicken and white rice' principle. The overall summary should justify these drastic cuts as a high-intensity strategy to rapidly reach a critical financial goal.";
     case BudgetModeEnum.STANDARD:
     default:
       return "For this plan, create a balanced '50/30/20' style budget (50% needs, 30% wants, 20% savings) as a guiding principle, but adjust it based on the user's data. The goal is a sustainable budget that allows for comfortable living while still achieving significant savings. The user should not feel overly restricted.";
@@ -72,40 +73,54 @@ export const generateBudgetPlan = async (
   
   const systemInstruction = `You are 'Budget Boss', an expert financial advisor AI. Your goal is to create clear, actionable, and personalized budget plans to help users achieve their financial goals, such as retirement. Your tone must be encouraging, positive, and informative. Always provide a summary of potential monthly and annual savings. Use the user's currency implicitly without specifying a symbol. All monetary values in your response must be numbers, precise to two decimal places.`;
   
-  const prompt = `
-    Please analyze the following financial information and generate a personalized budget plan.
-    
-    Budgeting Mode: ${mode}
-    Monthly Income: ${data.income}
-    Current Monthly Expenses (user-provided list): "${data.expenses}"
-    
-    Instructions:
-    1. Analyze the income and the list of expenses provided. Infer categories and amounts from the user's expense list.
-    2. Crucially, only create budget breakdown categories for items explicitly mentioned by the user. Do not invent or add categories that are not in the user's list. For example, if the user only lists 'food 234', your breakdown should only contain a 'food' category. Do not add 'rent' or 'groceries' if they were not mentioned.
-    3. Based on the selected '${mode}' mode, create a new budget allocation for the provided expense categories.
-    4. ${modeInstructions}
-    5. Calculate the total potential monthly and annual savings based on your recommended budget.
-    6. Provide a summary and some actionable tips.
-    7. Your final output must be a JSON object that strictly adheres to the provided schema.
-  `;
-  
+  const prompt = `Please create a budget plan based on the following financial data:
+- Monthly Income (after tax): ${data.income}
+- Current Monthly Expenses: ${data.expenses}
+
+**Important Rule:** The 'budgetBreakdown' in your response must be based *only* on the expense categories provided by the user in 'Current Monthly Expenses'. You can recommend reducing the amount for an existing category or removing a category entirely by omitting it from the breakdown (especially for non-essentials in Minimalist mode). **Do not introduce any new expense categories.** Your task is to optimize the user's *existing* expense list, not to add to it.
+
+Apply the following budgeting approach: ${modeInstructions}`;
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: prompt,
+      contents: [{ parts: [{ text: prompt }] }],
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction,
         responseMimeType: "application/json",
-        responseSchema: responseSchema,
+        responseSchema,
         temperature: 0.5,
       },
     });
 
+    // The response text is a string, but it's formatted as JSON due to responseSchema.
     const jsonText = response.text.trim();
-    return JSON.parse(jsonText) as BudgetPlan;
+    const parsedPlan: BudgetPlan = JSON.parse(jsonText);
+    
+    // Data validation and sanitization
+    if (!parsedPlan.budgetBreakdown) {
+        parsedPlan.budgetBreakdown = [];
+    }
+    if (!parsedPlan.financialTips) {
+        parsedPlan.financialTips = [];
+    }
+    
+    parsedPlan.potentialMonthlySavings = Number(parsedPlan.potentialMonthlySavings) || 0;
+    parsedPlan.potentialAnnualSavings = Number(parsedPlan.potentialAnnualSavings) || 0;
+    
+    parsedPlan.budgetBreakdown = parsedPlan.budgetBreakdown.map(item => ({
+        ...item,
+        recommendedAmount: Number(item.recommendedAmount) || 0,
+    }));
 
+    return parsedPlan;
   } catch (error) {
-    console.error("Error generating budget plan from Gemini API:", error);
-    throw new Error("The AI model could not generate a plan. Please check your inputs or try again later.");
+    console.error("Error generating budget plan:", error);
+    let errorMessage = "An unexpected error occurred while generating the plan.";
+    if (error instanceof Error) {
+        errorMessage = `API Error: ${error.message}`;
+    }
+    // It's better to throw the error so the UI can catch it and display a message.
+    throw new Error(errorMessage);
   }
 };
