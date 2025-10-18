@@ -13,6 +13,7 @@ export interface BudgetItem {
   category: string;
   recommendedAmount: number;
   notes: string;
+  originalCategory?: string;
 }
 
 export interface ExpenseItem {

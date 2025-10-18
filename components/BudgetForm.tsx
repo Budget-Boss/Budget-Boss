@@ -8,6 +8,7 @@ interface ExpenseItem {
   id: string;
   category: string;
   amount: string;
+  isFixed?: boolean;
 }
 
 interface BudgetFormProps {
@@ -20,8 +21,8 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
   const [income, setIncome] = useState<string>('');
   const [savingsGoal, setSavingsGoal] = useState<string>('');
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
-    { id: crypto.randomUUID(), category: 'Rent', amount: '' },
-    { id: crypto.randomUUID(), category: 'Food', amount: '' },
+    { id: crypto.randomUUID(), category: 'Rent', amount: '', isFixed: true },
+    { id: crypto.randomUUID(), category: 'Food', amount: '', isFixed: true },
   ]);
   const [error, setError] = useState<string | null>(null);
 
@@ -187,8 +188,9 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
                         value={item.category}
                         onChange={(e) => handleExpenseChange(item.id, 'category', e.target.value)}
                         placeholder="e.g., Rent"
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed"
                         aria-label="Expense Category"
+                        disabled={item.isFixed}
                     />
                     <div className="relative">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -208,13 +210,15 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, isLoading, bud
                     <button
                         type="button"
                         onClick={() => handleRemoveExpense(item.id)}
-                        className="text-gray-500 hover:text-red-400 transition-colors duration-200 p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="text-gray-500 hover:text-red-400 transition-colors duration-200 p-2 rounded-full disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center disabled:hover:text-gray-500"
                         aria-label="Remove expense"
-                        disabled={expenseItems.length <= 1}
+                        disabled={item.isFixed}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        {!item.isFixed && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
                     </button>
                 </div>
             ))}

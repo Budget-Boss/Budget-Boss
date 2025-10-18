@@ -61,8 +61,30 @@ export const BudgetPlanDisplay: React.FC<BudgetPlanDisplayProps> = ({ plan, isLo
     const parsed = parseExpenses(originalData.expenses);
     const total = parsed.reduce((sum, item) => sum + item.amount, 0);
     const savings = originalData.income - total;
+
+    // If we have a plan from the AI, use it to correct typos in the user's original list.
+    if (plan && plan.budgetBreakdown) {
+      const correctionMap = new Map<string, string>(); // Map from original (lowercase) to corrected
+      plan.budgetBreakdown.forEach(item => {
+        if (item.originalCategory && item.originalCategory.toLowerCase() !== item.category.toLowerCase()) {
+          correctionMap.set(item.originalCategory.toLowerCase(), item.category);
+        }
+      });
+
+      if (correctionMap.size > 0) {
+        const correctedParsed = parsed.map(exp => {
+          const correctedCategory = correctionMap.get(exp.category.toLowerCase());
+          if (correctedCategory) {
+            return { ...exp, category: correctedCategory };
+          }
+          return exp;
+        });
+        return { userExpenses: correctedParsed, totalUserExpenses: total, currentUserSavings: savings };
+      }
+    }
+    
     return { userExpenses: parsed, totalUserExpenses: total, currentUserSavings: savings };
-  }, [originalData]);
+  }, [originalData, plan]);
 
   const { totalRecommendedExpenses, totalAvailableWithPlan } = useMemo(() => {
     if (!plan || !originalData) {

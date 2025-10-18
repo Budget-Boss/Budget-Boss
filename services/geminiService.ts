@@ -28,7 +28,7 @@ const responseSchema = {
         properties: {
           category: { 
             type: Type.STRING, 
-            description: "The name of the spending category (e.g., 'Housing', 'Groceries')." 
+            description: "The name of the spending category (e.g., 'Housing', 'Groceries'). This should be the corrected name if a typo was found." 
           },
           recommendedAmount: { 
             type: Type.NUMBER, 
@@ -38,6 +38,10 @@ const responseSchema = {
             type: Type.STRING, 
             description: "A brief tip or explanation for this category's recommended budget." 
           },
+          originalCategory: {
+            type: Type.STRING,
+            description: "If you corrected a typo from the user's input, provide the original misspelled category here. Otherwise, omit this field."
+          }
         },
         required: ["category", "recommendedAmount", "notes"],
       },
@@ -93,6 +97,10 @@ ${data.savingsGoal ? `- Desired Monthly Savings Goal: ${data.savingsGoal}\n` : '
 
 **Health and Safety Rule:** Your primary responsibility is the user's financial and personal well-being. If you identify expense categories related to harmful or high-risk activities (such as 'gambling', 'drugs', 'heroine', 'alcohol', 'vaping', 'cigarettes'), you **must** set the \`recommendedAmount\` for these categories to \`0\`. In the \`notes\` for that budget item, provide a supportive and non-judgmental explanation, for example: 'We've set this to $0 to prioritize your long-term health and financial security, which is the most valuable investment you can make.' This rule overrides all other budgeting modes and instructions.
 
+**Typo Correction Rule:** The user may make spelling errors when entering expense categories. You **must** identify and correct common typos to standard financial categories (e.g., 'rebt' should become 'Rent', 'fud' should become 'Food'). When you correct a typo:
+1.  Use the corrected, standard category name in the \`category\` field.
+2.  You **must** include the \`originalCategory\` field in the response item, containing the user's exact original (misspelled) input. This is critical for the UI to correctly map the user's input to your recommendation.
+
 **Inflexible Expenses Rule:** The following expense categories are considered fixed and non-negotiable based on their names: rent, debt, tuition, loan, mortgage, car payment, insurance, child support, alimony. When you find an expense in the user's list that matches these, its recommended amount in the 'budgetBreakdown' **must remain exactly the same** as the user's input. You are not allowed to suggest reductions for these items. All budget adjustments must come from other, flexible spending categories.
 
 **Core Principle: Realistic Budgeting for High Earners:** This principle overrides all other budgeting instructions when income is significantly higher than expenses.
@@ -102,7 +110,7 @@ ${data.savingsGoal ? `- Desired Monthly Savings Goal: ${data.savingsGoal}\n` : '
 
 **Critical Scenario Handling:** If the user's total 'Current Monthly Expenses' exceed their 'Monthly Income', your primary goal is to create a viable budget by recommending significant, realistic reductions to their spending. Your plan must bring their total expenses below their income to allow for savings. Be direct but encouraging about the need for these changes.
 
-**Important Rule:** The 'budgetBreakdown' in your response must be based *only* on the expense categories provided by the user in 'Current Monthly Expenses'. You can recommend reducing the amount for an existing category or removing a category entirely by omitting it from the breakdown. **Do not introduce any new expense categories under any circumstances.** Your task is to optimize the user's *existing* expense list.
+**Important Rule:** The 'budgetBreakdown' in your response must be based *only* on the expense categories provided by the user in 'Current Monthly Expenses'. You can recommend reducing the amount for an existing category or removing a category entirely by omitting it from the breakdown. After applying the Typo Correction Rule, **do not introduce any new expense categories under any circumstances.** Your task is to optimize the user's *existing* expense list.
 
 Apply the following budgeting approach: ${modeInstructions}`;
 
