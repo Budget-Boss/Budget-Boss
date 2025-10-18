@@ -32,11 +32,13 @@ const FeatureCard: React.FC<{
 
 export const AboutSection: React.FC = () => {
   return (
-    <section id="about" className="mb-64 pt-40 text-center">
-      <h2 className="text-2xl md:text-3xl font-bold mb-4 text-cyan-400">Unlock Your Financial Potential</h2>
-      <p className="max-w-3xl mx-auto text-gray-300 mb-10 text-lg">
-        Budget Boss is more than just a calculator. It's your personal AI financial advisor, dedicated to creating a customized roadmap to help you achieve your dreams, whether that's early retirement, a down payment on a house, or simply living with financial peace of mind.
-      </p>
+    <section id="about" className="mb-64 pt-40">
+      <div className="max-w-4xl mx-auto text-center bg-gray-800 p-6 md:p-8 rounded-2xl border border-gray-700 shadow-2xl mb-16">
+        <h2 className="text-2xl md:text-3xl font-bold mb-4 text-cyan-400">Unlock Your Financial Potential</h2>
+        <p className="max-w-3xl mx-auto text-gray-300 text-lg">
+          Budget Boss is more than just a calculator. It's your personal AI financial advisor, dedicated to creating a customized roadmap to help you achieve your dreams, whether that's early retirement, a down payment on a house, or simply living with financial peace of mind.
+        </p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
         <FeatureCard
           icon={<BrainCircuitIcon className="h-6 w-6 text-cyan-400" />}

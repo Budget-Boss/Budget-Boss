@@ -37,9 +37,32 @@ const App: React.FC = () => {
   }, [budgetMode]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
+    <div className="relative min-h-screen text-gray-100 flex flex-col overflow-hidden">
+      {/* Background SVG - now covers the entire page */}
+      <div className="absolute inset-0 z-0">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <defs>
+            {/* Grid pattern */}
+            <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+              <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1"/>
+            </pattern>
+            {/* Central glow effect */}
+            <radialGradient id="glow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+              <stop offset="0%" style={{stopColor: 'rgba(34, 211, 238, 0.25)'}} />
+              <stop offset="100%" style={{stopColor: 'rgba(34, 211, 238, 0)'}} />
+            </radialGradient>
+          </defs>
+          
+          {/* Layer 1: Grid pattern */}
+          <rect width="100%" height="100%" fill="url(#grid)" />
+          
+          {/* Layer 2: Central glow */}
+          <rect width="100%" height="100%" fill="url(#glow)" />
+        </svg>
+      </div>
+
       <Header onGetStarted={handleGetStarted} />
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+      <main className="flex-grow container mx-auto px-4 py-8 md:py-12 relative z-10">
         <div className="max-w-4xl mx-auto">
           <AboutSection />
           <AboutUsSection />
