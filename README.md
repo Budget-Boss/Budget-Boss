@@ -2,11 +2,27 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+## Budget Boss
 
-This contains everything you need to run your app locally.
+Retire effortlessly with your personal AI financial planner: Budget Boss
 
-View your app in AI Studio: https://ai.studio/apps/drive/1bKlfC-vwJojs3U-8RUuzw6DKrOYjHoiy
+This website is intended for users to be able to manage their expenses and work with them to get more savings over time.
+One can figure out a savings plan with this website to allocate to a savings account and think about the future.
+
+
+
+# Created by:
+
+Two students from CUNY - The City College of New York, Richard Chen and Darren Viloria
+
+# Created for:
+
+Hack Knight 2025 at Queens College.
+
+
+
+
+
 
 ## Run Locally
 
