@@ -2,7 +2,7 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-## Budget Boss
+# Budget Boss
 
 Retire effortlessly with your personal AI financial planner: Budget Boss
 
@@ -11,11 +11,11 @@ One can figure out a savings plan with this website to allocate to a savings acc
 
 
 
-# Created by:
+## Created by:
 
 Two students from CUNY - The City College of New York, Richard Chen and Darren Viloria
 
-# Created for:
+## Created for:
 
 Hack Knight 2025 at Queens College.
 
